@@ -1,5 +1,6 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const { haversineDistance } = require("../utils/geoFilter");
 
 // POST /api/orders  — buyer places order
 const createOrder = async (req, res) => {
@@ -112,7 +113,77 @@ const updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+const createOrder = async (req, res) => {
+  const { items, deliveryAddress, contactNumber, note, paymentMethod } =
+    req.body;
 
+  try {
+    // Get buyer's location from their profile
+    const buyer = await require("../models/User").findById(req.user._id);
+    if (!buyer.location?.coordinates?.length)
+      return res.status(400).json({ message: "Buyer location not set" });
+
+    const orderItems = [];
+    let totalAmount = 0;
+    let sellerId = null;
+
+    for (const item of items) {
+      const product = await Product.findById(item.product).populate("seller");
+      if (!product || !product.isActive)
+        return res.status(400).json({ message: `Product no longer available` });
+
+      // Hard geo check — reject if seller is outside 10km
+      const dist = haversineDistance(
+        buyer.location.coordinates,
+        product.location.coordinates,
+      );
+      if (dist > 10)
+        return res.status(403).json({
+          message: `Seller is ${dist.toFixed(1)}km away — outside your 10km zone`,
+        });
+
+      if (product.stock < item.quantity)
+        return res
+          .status(400)
+          .json({ message: `Not enough stock for ${product.title}` });
+
+      // Enforce single-seller orders
+      if (sellerId && sellerId !== product.seller._id.toString())
+        return res
+          .status(400)
+          .json({ message: "All items must be from the same seller" });
+
+      sellerId = product.seller._id.toString();
+
+      product.stock -= item.quantity;
+      await product.save();
+
+      orderItems.push({
+        product: product._id,
+        title: product.title,
+        price: product.price,
+        quantity: item.quantity,
+        image: product.images[0] || "",
+      });
+      totalAmount += product.price * item.quantity;
+    }
+
+    const order = await require("../models/Order").create({
+      buyer: req.user._id,
+      seller: sellerId,
+      items: orderItems,
+      totalAmount,
+      deliveryAddress,
+      contactNumber,
+      note,
+      paymentMethod: paymentMethod || "cod",
+    });
+
+    res.status(201).json(order);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 module.exports = {
   createOrder,
   getBuyerOrders,

@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "start": "concurrently \"npm start --prefix server\" \"npm run preview --prefix client\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "axios": "^1.15.2",
