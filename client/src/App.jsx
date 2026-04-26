@@ -6,6 +6,7 @@ import Checkout from "./pages/buyer/Checkout";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import BuyerOrders from "./pages/buyer/BuyerOrders";
 
 function App() {
   return (
@@ -48,6 +49,14 @@ function App() {
             element={
               <ProtectedRoute role="seller">
                 <SellerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/buyer/orders"
+            element={
+              <ProtectedRoute role="buyer">
+                <BuyerOrders />
               </ProtectedRoute>
             }
           />

@@ -10,7 +10,7 @@ import logo from "../../assets/logo.png";
 const CATEGORIES = [
   "all",
   "food",
-  "handmade",
+  "furniture",
   "clothing",
   "electronics",
   "other",
@@ -18,11 +18,14 @@ const CATEGORIES = [
 const CAT_ICONS = {
   all: "🏠",
   food: "🍱",
-  handmade: "🎨",
+  furniture: "🪑",
   clothing: "👗",
   electronics: "📱",
   other: "📦",
 };
+
+const RED = "#e53935";
+const REDLT = "#ffebee";
 
 const BuyerHome = () => {
   const { coords, error, loading } = useLocation();
@@ -38,7 +41,7 @@ const BuyerHome = () => {
 
   useEffect(() => {
     if (!coords) return;
-    const fetch = async () => {
+    const fetchProducts = async () => {
       setFetching(true);
       try {
         const params = new URLSearchParams({
@@ -55,7 +58,7 @@ const BuyerHome = () => {
         setFetching(false);
       }
     };
-    fetch();
+    fetchProducts();
   }, [coords, search, category]);
 
   const addToCart = (product) => {
@@ -81,6 +84,7 @@ const BuyerHome = () => {
   const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0);
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  // ── Loading screen ───────────────────────────────────────
   if (loading)
     return (
       <div style={s.splash}>
@@ -89,11 +93,16 @@ const BuyerHome = () => {
           alt="Mini Bazar"
           style={{ width: 80, marginBottom: 16 }}
         />
-        <p style={{ color: RED, fontWeight: 700, fontSize: 16 }}>Mini Bazar</p>
-        <p style={{ color: "#aaa", fontSize: 13 }}>Getting your location...</p>
+        <p style={{ color: RED, fontWeight: 800, fontSize: 20, margin: 0 }}>
+          Mini Bazar
+        </p>
+        <p style={{ color: "#aaa", fontSize: 13, marginTop: 8 }}>
+          Getting your location...
+        </p>
       </div>
     );
 
+  // ── Location error screen ────────────────────────────────
   if (error)
     return (
       <div style={s.splash}>
@@ -102,9 +111,11 @@ const BuyerHome = () => {
           alt="Mini Bazar"
           style={{ width: 80, marginBottom: 16 }}
         />
-        <p style={{ color: RED, fontWeight: 700, fontSize: 18 }}>Mini Bazar</p>
-        <p style={{ color: "#e53935", fontSize: 14, marginTop: 8 }}>{error}</p>
-        <p style={{ color: "#aaa", fontSize: 12 }}>
+        <p style={{ color: RED, fontWeight: 800, fontSize: 20, margin: 0 }}>
+          Mini Bazar
+        </p>
+        <p style={{ color: RED, fontSize: 14, marginTop: 12 }}>{error}</p>
+        <p style={{ color: "#aaa", fontSize: 12, marginTop: 4 }}>
           Allow location access to see nearby products
         </p>
       </div>
@@ -112,7 +123,7 @@ const BuyerHome = () => {
 
   return (
     <div style={s.page}>
-      {/* Navbar */}
+      {/* ── Navbar ─────────────────────────────────────────── */}
       <nav style={s.nav}>
         <div style={s.navLeft}>
           <img src={logo} alt="Mini Bazar" style={s.navLogo} />
@@ -121,13 +132,23 @@ const BuyerHome = () => {
             <p style={s.navSub}>📍 Showing products near you</p>
           </div>
         </div>
+
         <div style={s.navRight}>
           <span style={s.greeting}>Hi, {user?.name}</span>
+
+          {/* Orders button */}
+          <button style={s.ordersBtn} onClick={() => navigate("/buyer/orders")}>
+            📋 My orders
+          </button>
+
+          {/* Cart button */}
           <button style={s.cartBtn} onClick={() => setCartOpen(true)}>
             🛒
             {cartCount > 0 && <span style={s.cartBadge}>{cartCount}</span>}
             {cartCount > 0 && <span style={s.cartTotal}> ₹{cartTotal}</span>}
           </button>
+
+          {/* Logout button */}
           <button
             style={s.logoutBtn}
             onClick={() => {
@@ -140,7 +161,7 @@ const BuyerHome = () => {
         </div>
       </nav>
 
-      {/* Search bar */}
+      {/* ── Search bar ─────────────────────────────────────── */}
       <div style={s.searchBar}>
         <div style={s.searchWrap}>
           <span style={s.searchIcon}>🔍</span>
@@ -158,12 +179,15 @@ const BuyerHome = () => {
         </div>
       </div>
 
-      {/* Category filter */}
+      {/* ── Category filter ────────────────────────────────── */}
       <div style={s.catBar}>
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
-            style={{ ...s.catBtn, ...(category === cat ? s.catBtnActive : {}) }}
+            style={{
+              ...s.catBtn,
+              ...(category === cat ? s.catBtnActive : {}),
+            }}
             onClick={() => setCategory(cat)}
           >
             <span style={{ fontSize: 16 }}>{CAT_ICONS[cat]}</span>
@@ -174,7 +198,7 @@ const BuyerHome = () => {
         ))}
       </div>
 
-      {/* Content */}
+      {/* ── Product grid ───────────────────────────────────── */}
       <div style={s.content}>
         {fetching ? (
           <div style={s.loadingWrap}>
@@ -212,7 +236,7 @@ const BuyerHome = () => {
         )}
       </div>
 
-      {/* Cart drawer */}
+      {/* ── Cart drawer ────────────────────────────────────── */}
       {cartOpen && (
         <CartDrawer
           cart={cart}
@@ -229,15 +253,15 @@ const BuyerHome = () => {
   );
 };
 
-const RED = "#e53935";
-const REDLT = "#ffebee";
-
 const s = {
+  // Full page
   page: {
     minHeight: "100vh",
     backgroundColor: "#fafafa",
     fontFamily: "sans-serif",
   },
+
+  // Splash (loading / error)
   splash: {
     minHeight: "100vh",
     display: "flex",
@@ -245,7 +269,10 @@ const s = {
     alignItems: "center",
     justifyContent: "center",
     fontFamily: "sans-serif",
+    padding: 20,
   },
+
+  // Navbar
   nav: {
     display: "flex",
     justifyContent: "space-between",
@@ -264,6 +291,18 @@ const s = {
   navSub: { margin: "2px 0 0", fontSize: 11, color: "#aaa" },
   navRight: { display: "flex", alignItems: "center", gap: 12 },
   greeting: { fontSize: 13, color: "#555" },
+
+  // Nav buttons
+  ordersBtn: {
+    padding: "8px 14px",
+    backgroundColor: REDLT,
+    color: RED,
+    border: `1px solid ${RED}`,
+    borderRadius: 8,
+    cursor: "pointer",
+    fontSize: 13,
+    fontWeight: 600,
+  },
   cartBtn: {
     position: "relative",
     display: "flex",
@@ -293,14 +332,15 @@ const s = {
   cartTotal: { fontSize: 13 },
   logoutBtn: {
     padding: "8px 14px",
-    backgroundColor: REDLT,
-    color: RED,
-    border: `1px solid ${RED}`,
+    backgroundColor: "transparent",
+    border: "1px solid #ddd",
     borderRadius: 8,
     cursor: "pointer",
     fontSize: 13,
-    fontWeight: 600,
+    color: "#666",
   },
+
+  // Search
   searchBar: {
     backgroundColor: "#fff",
     padding: "14px 24px",
@@ -313,6 +353,7 @@ const s = {
     top: "50%",
     transform: "translateY(-50%)",
     fontSize: 16,
+    pointerEvents: "none",
   },
   searchInput: {
     width: "100%",
@@ -335,6 +376,8 @@ const s = {
     color: "#aaa",
     fontSize: 14,
   },
+
+  // Categories
   catBar: {
     display: "flex",
     gap: 8,
@@ -358,6 +401,8 @@ const s = {
     minWidth: 60,
   },
   catBtnActive: { borderColor: RED, backgroundColor: REDLT, color: RED },
+
+  // Content
   content: { padding: 24 },
   loadingWrap: { display: "flex", justifyContent: "center", padding: 60 },
   empty: { textAlign: "center", padding: "60px 0" },
