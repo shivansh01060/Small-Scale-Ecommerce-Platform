@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import api from "../../services/api";
 import logo from "../../assets/logo.png";
 
-const CATEGORIES = ["food", "handmade", "clothing", "electronics", "other"];
+const CATEGORIES = ["food", "furniture", "clothing", "electronics", "other"];
 
 const CATEGORY_ICONS = {
   food: "🍱",
-  handmade: "🎨",
+  furniture: "🪑",
   clothing: "👗",
   electronics: "📱",
   other: "📦",

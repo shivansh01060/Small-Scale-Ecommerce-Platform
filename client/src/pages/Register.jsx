@@ -3,30 +3,31 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
 
+const RED = "#e53935";
+const REDLT = "#ffebee";
+
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-
   const [role, setRole] = useState("buyer");
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    address: "",
+    apartment: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [locMsg, setLocMsg] = useState("");
 
   const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.password)
       return setError("Name, email and password are required");
     if (form.password.length < 6)
       return setError("Password must be at least 6 characters");
-
     setLoading(true);
     setError("");
 
@@ -37,6 +38,7 @@ const Register = () => {
           email: form.email,
           password: form.password,
           role,
+          apartment: form.apartment, // ✅ top-level
           ...(role === "seller" && locationData
             ? { location: locationData }
             : {}),
@@ -58,7 +60,6 @@ const Register = () => {
           doRegister({
             type: "Point",
             coordinates: [coords.longitude, coords.latitude],
-            address: form.address || "Apartment complex",
           });
         },
         () => {
@@ -77,48 +78,34 @@ const Register = () => {
   return (
     <div style={s.page}>
       <div style={s.card}>
-        {/* Logo */}
         <div style={s.logoWrap}>
           <img src={logo} alt="Mini Bazar" style={s.logo} />
           <h1 style={s.appName}>Mini Bazar</h1>
           <p style={s.tagline}>Your neighbourhood marketplace</p>
         </div>
-
         <h2 style={s.title}>Create account</h2>
         <p style={s.sub}>Join your apartment community</p>
 
         {/* Role toggle */}
         <div style={s.roleRow}>
-          <button
-            style={{
-              ...s.roleBtn,
-              ...(role === "buyer" ? s.roleBtnActive : {}),
-            }}
-            onClick={() => setRole("buyer")}
-          >
-            🛒 I want to buy
-          </button>
-          <button
-            style={{
-              ...s.roleBtn,
-              ...(role === "seller" ? s.roleBtnActive : {}),
-            }}
-            onClick={() => setRole("seller")}
-          >
-            🏪 I want to sell
-          </button>
+          {["buyer", "seller"].map((r) => (
+            <button
+              key={r}
+              style={{ ...s.roleBtn, ...(role === r ? s.roleBtnActive : {}) }}
+              onClick={() => setRole(r)}
+            >
+              {r === "buyer" ? "🛒 I want to buy" : "🏪 I want to sell"}
+            </button>
+          ))}
         </div>
 
-        {/* Role info banner */}
         <div
           style={{
-            ...s.infoBanner,
+            ...s.banner,
             backgroundColor: role === "seller" ? "#fff3e0" : "#e8f5e9",
           }}
         >
-          <span style={{ fontSize: 16 }}>
-            {role === "seller" ? "📍" : "🛍️"}
-          </span>
+          <span>{role === "seller" ? "📍" : "🛍️"}</span>
           <p
             style={{
               margin: 0,
@@ -127,71 +114,66 @@ const Register = () => {
             }}
           >
             {role === "seller"
-              ? "Your location will be used to show your products to nearby buyers within 10km"
-              : "You can browse and buy products from sellers in your apartment area"}
+              ? "Your GPS location will be saved so buyers within 10km can find you"
+              : "Browse and buy from sellers inside your apartment complex"}
           </p>
         </div>
 
-        <div style={s.field}>
-          <label style={s.label}>Full name</label>
-          <input
-            style={s.input}
-            name="name"
-            placeholder="Your name"
-            value={form.name}
-            onChange={handleChange}
-          />
-        </div>
+        <label style={s.label}>Full name</label>
+        <input
+          style={s.input}
+          name="name"
+          placeholder="Your name"
+          value={form.name}
+          onChange={handleChange}
+        />
 
-        <div style={s.field}>
-          <label style={s.label}>Email address</label>
-          <input
-            style={s.input}
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={handleChange}
-          />
-        </div>
+        <label style={s.label}>Email address</label>
+        <input
+          style={s.input}
+          name="email"
+          type="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={handleChange}
+        />
 
-        <div style={s.field}>
-          <label style={s.label}>Password</label>
-          <input
-            style={s.input}
-            name="password"
-            type="password"
-            placeholder="Minimum 6 characters"
-            value={form.password}
-            onChange={handleChange}
-          />
-        </div>
+        <label style={s.label}>Password</label>
+        <input
+          style={s.input}
+          name="password"
+          type="password"
+          placeholder="Minimum 6 characters"
+          value={form.password}
+          onChange={handleChange}
+        />
 
-        {role === "seller" && (
-          <div style={s.field}>
-            <label style={s.label}>Your flat / tower</label>
-            <input
-              style={s.input}
-              name="address"
-              placeholder="e.g. Tower B, Flat 204"
-              value={form.address}
-              onChange={handleChange}
-            />
-            <p style={s.hint}>Shown to buyers after they order from you</p>
-          </div>
+        <label style={s.label}>
+          {role === "seller"
+            ? "Your flat / tower"
+            : "Your flat / tower (optional)"}
+        </label>
+        <input
+          style={s.input}
+          name="apartment"
+          placeholder="e.g. Tower B, Flat 204"
+          value={form.apartment}
+          onChange={handleChange}
+        />
+        {locMsg && (
+          <p style={{ color: "#e65100", fontSize: 13, marginBottom: 8 }}>
+            📍 {locMsg}
+          </p>
         )}
-
-        {locMsg && <p style={s.locMsg}>📍 {locMsg}</p>}
         {error && <div style={s.errorBox}>⚠️ {error}</div>}
 
         <button
-          style={{ ...s.submitBtn, opacity: loading ? 0.75 : 1 }}
+          style={{ ...s.btn, opacity: loading ? 0.75 : 1 }}
           onClick={handleSubmit}
           disabled={loading}
         >
           {loading ? "Creating account..." : `Create ${role} account →`}
         </button>
-
         <p style={s.switchText}>
           Already have an account?{" "}
           <Link to="/login" style={s.link}>
@@ -202,9 +184,6 @@ const Register = () => {
     </div>
   );
 };
-
-const RED = "#e53935";
-const REDLT = "#ffebee";
 
 const s = {
   page: {
@@ -223,7 +202,6 @@ const s = {
     width: "100%",
     maxWidth: 420,
     boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-    border: "1px solid #f0f0f0",
   },
   logoWrap: {
     display: "flex",
@@ -253,7 +231,7 @@ const s = {
     color: "#888",
   },
   roleBtnActive: { borderColor: RED, backgroundColor: REDLT, color: RED },
-  infoBanner: {
+  banner: {
     display: "flex",
     alignItems: "flex-start",
     gap: 10,
@@ -261,13 +239,13 @@ const s = {
     borderRadius: 8,
     marginBottom: 20,
   },
-  field: { marginBottom: 16 },
   label: {
     display: "block",
     fontSize: 13,
     fontWeight: 600,
     color: "#444",
     marginBottom: 6,
+    marginTop: 4,
   },
   input: {
     width: "100%",
@@ -275,13 +253,11 @@ const s = {
     fontSize: 14,
     border: "1.5px solid #e8e8e8",
     borderRadius: 9,
+    marginBottom: 14,
     boxSizing: "border-box",
     outline: "none",
     fontFamily: "sans-serif",
-    color: "#333",
   },
-  hint: { margin: "5px 0 0", fontSize: 11, color: "#aaa" },
-  locMsg: { fontSize: 13, color: "#e65100", marginBottom: 10 },
   errorBox: {
     backgroundColor: REDLT,
     color: RED,
@@ -291,9 +267,9 @@ const s = {
     marginBottom: 14,
     border: `1px solid ${RED}`,
   },
-  submitBtn: {
+  btn: {
     width: "100%",
-    padding: "13px",
+    padding: 13,
     backgroundColor: RED,
     color: "#fff",
     border: "none",

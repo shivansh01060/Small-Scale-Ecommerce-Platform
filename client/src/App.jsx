@@ -42,14 +42,7 @@ function App() {
           />
 
           {/* Seller routes — coming next */}
-          <Route
-            path="/seller/dashboard"
-            element={
-              <ProtectedRoute role="seller">
-                <div>Seller dashboard coming soon</div>
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/seller/dashboard"
             element={

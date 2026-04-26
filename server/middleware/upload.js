@@ -1,20 +1,39 @@
-const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+// const cloudinary = require("cloudinary").v2;
+// const { CloudinaryStorage } = require("multer-storage-cloudinary");
+// const multer = require("multer");
+
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
+// const storage = new CloudinaryStorage({
+//   cloudinary,
+//   params: {
+//     folder: "apartment-market",
+//     allowed_formats: ["jpg", "jpeg", "png", "webp"],
+//     transformation: [{ width: 800, height: 800, crop: "limit" }],
+//   },
+// });
+
+// module.exports = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
 const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const uploadDir = "uploads/";
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "apartment-market",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 800, height: 800, crop: "limit" }],
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
   },
 });
 
-module.exports = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
+module.exports = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
